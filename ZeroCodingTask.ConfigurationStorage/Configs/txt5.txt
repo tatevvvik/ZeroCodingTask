@@ -1,0 +1,2 @@
+FILE:innernode1:"Configs/txt7.txt"
+    FILE:innernode2:"Configs/txt888.txt"

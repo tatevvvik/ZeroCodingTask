@@ -1,0 +1,4 @@
+FILE:nodeFoo:"Configs/txt3.txt"    
+FILE:nodeBar:"Configs/txt5.txt"
+    keyFoo:"keyFoo value"
+    keyBar:"keyBar value"
