@@ -8,14 +8,14 @@ namespace ZeroCodingTask.ConfigurationStorage
         private CancellationTokenSource _cts;
         private FileSystemWatcher _watcher;
 
-        public ConfigFileStorageWatcher()
+        public ConfigFileStorageWatcher(string directory)
         {
             /// IMPORTANT NOTE !!!
             /// it will be better to have different directories rather than one called Configs
             /// and hence to have multiple watchers for different directories
             /// and when reloading reload only changed file keys determined by wathcer
 
-            _watcher = new FileSystemWatcher("Configs")
+            _watcher = new FileSystemWatcher(directory)
             {
                 EnableRaisingEvents = true,
                 Filter = "*.txt",
@@ -35,7 +35,6 @@ namespace ZeroCodingTask.ConfigurationStorage
 
         public void FileChangedHandler(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine($"Config file changed: {e.FullPath}");
             _cts?.Cancel();
         }
 
@@ -45,7 +44,7 @@ namespace ZeroCodingTask.ConfigurationStorage
             return new CancellationChangeToken(_cts.Token);
         }
 
-        public void Dispose()
+        void IDisposable.Dispose()
         {
             _watcher.Dispose();
             _cts.Dispose();

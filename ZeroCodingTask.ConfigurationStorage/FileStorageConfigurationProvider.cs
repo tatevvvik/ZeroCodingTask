@@ -16,8 +16,9 @@ namespace ZeroCodingTask.ConfigurationStorage
 
             if (_reloadOnChange)
             {
-                var fScM = new ConfigFileStorageWatcher();
-
+                var directory = new FileInfo(fileStoragePath).Directory.FullName;
+                var fScM = new ConfigFileStorageWatcher(directory);
+                
                 ChangeToken.OnChange(() => fScM.GetReloadToken(), () => ReLoad());
             }
         }
@@ -31,7 +32,6 @@ namespace ZeroCodingTask.ConfigurationStorage
 
         private void ReLoad()
         {
-            Console.WriteLine("Reloading data");
             Load();
         }
 

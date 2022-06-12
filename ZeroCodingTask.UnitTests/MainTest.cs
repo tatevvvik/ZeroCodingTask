@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using System.Text;
 using ZeroCodingTask.ConfigurationStorage.Extentions;
 
 namespace ConfigurationUnitTests
@@ -10,29 +9,61 @@ namespace ConfigurationUnitTests
         [TestMethod]
         public void TestWritingConfigurations()
         {
-            // Arrange
             string testConfigFile = "TestConfigFile.txt";
-            var testKey = "TestKey";
-            var testValue = "TestValue";
-            if (File.Exists(testConfigFile))
+            try
+            {
+                // Arrange
+                var testKey = "TestKey";
+                var testValue = "TestValue";
+
+                File.WriteAllText(testConfigFile, testKey + ":" + testValue + Environment.NewLine);
+
+                // Act
+                var config = new ConfigurationBuilder().AddFileStorageConfiguration(testConfigFile, reloadOnChange: false).Build();
+                var actualValue = config[testKey];
+
+                // Assert
+                Assert.AreEqual(testValue, actualValue, "Writing configuration failed");
+            }
+            finally
             {
                 File.Delete(testConfigFile);
             }
+        }
 
-            using (FileStream fs = File.Create(testConfigFile))
+        [TestMethod]
+        public void TestNestedWritingConfigurations()
+        {
+            string testConfigFile1 = "TestConfigFile1.txt";
+            string testConfigFile2 = "TestConfigFile2.txt";
+            try
             {
-                Byte[] title = new UTF8Encoding(true).GetBytes(testKey + ":" + testValue);
-                fs.Write(title, 0, title.Length);
+                // Arrange
+                var testKey1 = "TestKey1";
+                var testValue1 = "TestValue1";
+
+                var testKey2 = "TestKey2";
+                var testValue2 = "TestValue2";
+
+                var nodeName = "testConfig2";
+
+                var list = new[] { testKey1 + ":" + testValue1, $"FILE:{nodeName}:{testConfigFile2}" };
+                File.WriteAllLines(testConfigFile1, list);
+
+                File.WriteAllText(testConfigFile2, testKey2 + ":" + testValue2 + Environment.NewLine);
+
+                // Act
+                var config = new ConfigurationBuilder().AddFileStorageConfiguration(testConfigFile1, reloadOnChange: false).Build();
+                var actualValue = config[nodeName + ":" + testKey2];
+
+                // Assert
+                Assert.AreEqual(testValue2, actualValue, "Writing configuration failed");
             }
-
-            // Act
-            var config = new ConfigurationBuilder().AddFileStorageConfiguration("TestConfigFile.txt", reloadOnChange: false).Build();
-            var actualValue = config[testKey];
-
-            // Assert
-            var expectedValue = testValue;
-
-            Assert.AreEqual(expectedValue, actualValue, "Writing configuration failed");
+            finally
+            {
+                File.Delete(testConfigFile1);
+                File.Delete(testConfigFile2);
+            }
         }
 
         [TestMethod]
@@ -62,20 +93,32 @@ namespace ConfigurationUnitTests
             Assert.AreEqual(expectedValue, result3, "Reading configuration failed");
         }
 
+
         [TestMethod]
         public void TestReloadingConfigurations()
         {
-            // Arrange
-            var newKey = "newKey";
-            var newValue = "newValue";
-            var config = new ConfigurationBuilder().AddFileStorageConfiguration("Configs/root.txt", reloadOnChange: true).Build();
-            var lineToAppend = newKey + ":" + newValue + Environment.NewLine;
+            string testConfigFile = "TestConfigFile.txt";
+            try
+            {
+                // Arrange
+                var testKey = "TestKey";
+                var testValue = "TestValue";
 
-            File.AppendAllLines("Configs/root.txt", new List<string> { lineToAppend });
+                File.WriteAllText(testConfigFile, "key" + ":" + "value" + Environment.NewLine);
 
-            Thread.Sleep(1000);
+                var config = new ConfigurationBuilder().AddFileStorageConfiguration(testConfigFile, reloadOnChange: true).Build();
+                var lineToAppend = testKey + ":" + testValue + Environment.NewLine;
 
-            Assert.AreEqual(newValue, config[newKey], "Reloading failed");
+                File.AppendAllLines(testConfigFile, new List<string> { lineToAppend });
+
+                Thread.Sleep(5000);
+
+                Assert.AreEqual(testValue, config[testKey], "Reloading failed");
+            }
+            finally
+            {
+                File.Delete(testConfigFile);
+            }
         }
     }
 }
